@@ -277,7 +277,7 @@ class componentVHDL(component):
             isComponentParsed = False
             genRE = re.compile(r"generic([\t ]+)?\(",re.I)
             portRE = re.compile(r"port([\t ]+)?\(",re.I)
-            parentOpened = re.compile(r"\([\t \w]+\)",re.I)
+            parentOpened = re.compile(r"\([\t \w\+\-\*]+\)",re.I)
             while not isComponentParsed :
                 currStr = inpFile.readline()
                 if currStr == '':
@@ -293,7 +293,7 @@ class componentVHDL(component):
                             ([\t ]+)?       # Skip tabs and spaces
                             :               # Find colon
                             ([\t ]+)?       # Skip tabs and spaces
-                            [\w]+(\([\t \w]+\))?         # Catch parameter type
+                            [\w]+(\([\t \w\+\-\*]+\))?         # Catch parameter type
                             (([ \t]+)?      # Skip tabs and spaces
                             :=              # Find assignment sign
                             ([\t ]+)?       # Skip tabs and spaces
@@ -340,7 +340,7 @@ class componentVHDL(component):
                             ([\t ]+)?       # Skip tabs and spaces
                             [\w]+           # Catch inout port type
                             [ \t]+          # Skip tabs and spaces
-                            [\w]+(\([\t \w]+\))?          # Catch port type
+                            [\w]+(\([\t \w\+\-\*]+\))?          # Catch port type
                             """,re.I|re.VERBOSE)
                     currStr = inpFile.readline()
                     isPortEnd = (portEnd.search(currStr))!=None
@@ -446,8 +446,10 @@ def instantiateEntityVHDL(entityFileName,bufferFileName,currLine):
 import sys
 if __name__ == "__main__":
     strUsing = "Using of script:\n\tinstaniateEntityVHDL input_file output_file str_num"
+
     if len(sys.argv)!=4:
         print strUsing
         sys.exit(2)
     instantiateEntity(sys.argv[1],sys.argv[2],int(sys.argv[3]))
+
 
