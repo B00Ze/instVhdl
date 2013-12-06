@@ -2,7 +2,7 @@
 command! -nargs=1  -complete=file VHDLinst call VHDLinst('<args>')
 
 function! VHDLinst(fileName)
-  let instFileName = a:fileName
+  let instFileName = fnamemodify('a:fileName', ':p')
   let currBufferFileName = expand("%")
   let currLineNumber = line('.')
   let currDir = getcwd()
