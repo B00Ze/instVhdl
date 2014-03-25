@@ -8,6 +8,6 @@ To install this script as Vim plugin place plugin folder to .vim/
 
 After plugin installation you can use plugin by typing following command:
 
-  :instVHDL input_file
+  :InstVHDL input_file
 
 VHDL instance will be placed in current cursor line.
