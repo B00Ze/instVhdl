@@ -225,7 +225,7 @@ class componentVHDL(component):
                 "."+self.getName()+";\n"]
 
     def getStrMap(self):
-        strOut = ["\tentName : "+self.getName()+"\n"]
+        strOut = ["\t"+self.getName+"0 : "+self.getName()+"\n"]
         if self.genericList != []:
             strOut += ["\t\tgeneric map (\n"]
             for gen in self.genericList:
@@ -255,117 +255,62 @@ class componentVHDL(component):
             strOut[ind] = "\t"+strOut[ind]
         return strOut
 
-    def parseFile(self,fileName):
-        # Getting library
-        # Getting generics (parameters)
-        # Getting ports
+    def parseLib(self, fileName):
         libName = re.compile(r"\\[\w]+_lib\\",re.I)
         resLib = libName.search(fileName)
         if resLib != None:
             self.setLib(resLib.group()[1:-1])
         else:
             self.setLib("SomeLib")
-        inpFile = open(fileName)
-        entRE = re.compile(r"(?<=entity)[ ]+[\w]+[ ]+(?=is)",re.I)
-        currStr = inpFile.readline()
-        res = entRE.search(currStr)
-        while (res == None)and (currStr != '') :
-            currStr = inpFile.readline()
-            res = entRE.search(currStr)
-        if res != None:
-            self.setName(res.group().strip())
-            isComponentParsed = False
-            genRE = re.compile(r"generic([\t ]+)?\(",re.I)
-            portRE = re.compile(r"port([\t ]+)?\(",re.I)
-            parentOpened = re.compile(r"\([\t \w\+\-\*]+\)",re.I)
-            while not isComponentParsed :
-                currStr = inpFile.readline()
-                if currStr == '':
-                    isComponentParsed = True
-                # Generic parameters search
-                resGen = genRE.search(currStr)
-                if resGen != None :
-                    self.setGeneric([])
-                    genEnd = re.compile(r"\)([\t ]+)?\;",re.I)
-                    genPortRE = re.compile(r"""
-                            [\t ]+          # Skip tabs and spaces
-                            [\w]+           # Catch parameter name
-                            ([\t ]+)?       # Skip tabs and spaces
-                            :               # Find colon
-                            ([\t ]+)?       # Skip tabs and spaces
-                            [\w]+(\([\t \w\+\-\*]+\))?         # Catch parameter type
-                            (([ \t]+)?      # Skip tabs and spaces
-                            :=              # Find assignment sign
-                            ([\t ]+)?       # Skip tabs and spaces
-                            [\w\'\"]+)?     # Catch parameter default value
-                            """,re.I|re.VERBOSE)
-                    currStr = inpFile.readline()
-                    isGenEnd = (genEnd.search(currStr))!=None
-                    isParOpen = (parentOpened.search(currStr)) != None
-                    while (not (isGenEnd and  not isParOpen)) and (currStr != '') :
-                        resParam = genPortRE.match(currStr)
-                        if resParam != None:
-                            foundStr = resParam.group()
-                            openPar = foundStr.find('(')
-                            closePar = foundStr.find(')')
 
-                            if openPar>=0 and closePar>= 0:
-                                appendStr = foundStr[openPar:closePar+1]
-                                foundStr = foundStr[:openPar]+foundStr[closePar+1:]
-                            else:
-                                appendStr = ''
-                            st = re.sub('[=:]', ' ', foundStr)
-                            st = st.split()
-                            if len(st) >= 3:
-                                self.addGenericStr(st[0],st[1]+appendStr,st[2])
-                            else:
-                                self.addGenericStr(st[0],st[1],"")
+    def parseGenerics(self, genericStr):
+        if (genericStr == ""):
+            return
 
-                        currStr = inpFile.readline()
-                        isGenEnd = (genEnd.search(currStr))!=None
-                        isParOpen = (parentOpened.search(currStr)) != None
-                    if currStr=='':
-                        isComponentParsed = True
 
-                # Ports search
-                resPort = portRE.search(currStr)
-                if resPort != None :
-                    self.setInout([])
-                    portEnd = re.compile(r"\)([\t ]+)?\;",re.I)
-                    inoutPortRE = re.compile(r"""
-                            [\t ]+          # Skip tabs and spaces
-                            [\w]+           # Catch port name
-                            ([\t ]+)?       # Skip tabs and spaces
-                            :               # Find colon
-                            ([\t ]+)?       # Skip tabs and spaces
-                            [\w]+           # Catch inout port type
-                            [ \t]+          # Skip tabs and spaces
-                            [\w]+(\([\t \w\+\-\*]+\))?          # Catch port type
-                            """,re.I|re.VERBOSE)
-                    currStr = inpFile.readline()
-                    isPortEnd = (portEnd.search(currStr))!=None
-                    isParOpen = (parentOpened.search(currStr)) != None
-                    while (not (isPortEnd and  not isParOpen)) and (currStr != '') :
-                        resParam = inoutPortRE.match(currStr)
-                        if resParam != None:
-                            foundStr = resParam.group()
-                            openPar = foundStr.find('(')
-                            closePar = foundStr.find(')')
-                            if openPar>=0 and closePar>= 0:
-                                appendStr = foundStr[openPar:closePar+1]
-                                foundStr = foundStr[:openPar]+foundStr[closePar+1:]
-                            else:
-                                appendStr = ''
-                            st = re.sub('[=:]', ' ', foundStr)
-                            st = st.split()
-                            self.addInoutStr(st[0],st[2]+appendStr,st[1])
-                        currStr = inpFile.readline()
-                        isPortEnd = (portEnd.search(currStr))!=None
-                        isParOpen = (parentOpened.search(currStr)) != None
-                        isComponentParsed = isPortEnd and  not isParOpen
-                    if currStr=='':
-                        isComponentParsed = True
-        inpFile.close()
+    def parsePorts(self, portString):
+        if (portString == ""):
+            return
+
+    def parseEntity(self, entityFile):
+        with open(entityFile, "r") as f:
+            # Entity begining searching
+            entNameRE = re.compile(r"(?<=entity)[ \t]+[\w]+[ \t]+(?=is)",re.I)
+            entName = None
+            line = None
+            while (entName == None and line != ""):
+                line = f.readline()
+                entName = entNameRE.search(line)
+            print("Current line:"+line)
+            # Entity end searching
+            entEndER = re.compile(r"\bend\b",re.I)
+            entityStr = ""
+            entEnd = None
+            while(entEnd == None and line != ""):
+                line = f.readline()
+                entEnd = entEndER.search(line)
+                if (entEnd == None):
+                    # Comment removing and adding to entity string
+                    commentBeg = line.find("--")
+                    entityStr += line[:commentBeg]
+
+        portRE = re.compile(r"\bport\b",re.I);
+        entSplit = portRE.split(entityStr)
+
+        if (len(entSplit) > 1):
+            self.parseGenerics(entSplit[0])
+            self.parsePorts(entSplit[1])
+        else:
+            self.parsePorts(entSplit[0])
+
+
+
+
+    def parseFile(self, fileName):
+        # Getting library
+        self.parseLib(fileName)
+        # Getting entity content
+        self.parseEntity(fileName)
 
 def instantiateEntity(entityFileName,bufferFileName,currLine):
     if entityFileName[-4:]=='.vhd':
