@@ -225,7 +225,7 @@ class componentVHDL(component):
                 "."+self.getName()+";\n"]
 
     def getStrMap(self):
-        strOut = ["\t"+self.getName+"0 : "+self.getName()+"\n"]
+        strOut = ["\t"+self.getName()+"0 : "+self.getName()+"\n"]
         if self.genericList != []:
             strOut += ["\t\tgeneric map (\n"]
             for gen in self.genericList:
@@ -264,8 +264,30 @@ class componentVHDL(component):
             self.setLib("SomeLib")
 
     def parseGenerics(self, genericStr):
-        if (genericStr == ""):
+        openParPlace = genericStr.find("(")
+        closeParPlace = genericStr.rfind(")")
+        # Checking for empty generics list
+        if (openParPlace == -1 or closeParPlace == -1):
             return
+        genericContent = genericStr[openParPlace+1:closeParPlace]
+        # Generic list creation
+        genericList = genericContent.split(";")
+        for gen in genericList:
+            partLst = gen.split(":")
+            # First - parameter name, second - type, last - default value
+            if len(partLst) > 1:
+                parName = partLst[0].strip(" ")
+                parType = partLst[1].strip(" ")
+                if len(partLst) == 3:
+                    parDefVal = partLst[2]
+                    # Removing = sign
+                    parDefVal = parDefVal.strip("=")
+                    parDefVal = parDefVal.strip(" ")
+                else:
+                    parDefVal = ""
+
+                self.addGenericStr(parName, parType, parDefVal)
+
 
 
     def parsePorts(self, portString):
@@ -281,7 +303,10 @@ class componentVHDL(component):
             while (entName == None and line != ""):
                 line = f.readline()
                 entName = entNameRE.search(line)
-            print("Current line:"+line)
+            if entName == None:
+                self.name = "someEnt"
+            else:
+                self.name = entName.group().strip()
             # Entity end searching
             entEndER = re.compile(r"\bend\b",re.I)
             entityStr = ""
@@ -296,7 +321,7 @@ class componentVHDL(component):
 
         portRE = re.compile(r"\bport\b",re.I);
         entSplit = portRE.split(entityStr)
-
+        # Parsing of generic and port list
         if (len(entSplit) > 1):
             self.parseGenerics(entSplit[0])
             self.parsePorts(entSplit[1])
