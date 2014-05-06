@@ -285,16 +285,29 @@ class componentVHDL(component):
                     parDefVal = parDefVal.strip(" ")
                 else:
                     parDefVal = ""
-
                 self.addGenericStr(parName, parType, parDefVal)
 
-
-
     def parsePorts(self, portString):
-        if (portString == ""):
+        openParPlace = portString.find("(")
+        closeParPlace = portString.rfind(")")
+        # Checking for empty port list
+        if (openParPlace == -1 or closeParPlace == -1):
             return
+        genericContent = portString[openParPlace+1:closeParPlace]
+        # Generic list creation
+        genericList = genericContent.split(";")
+        for gen in genericList:
+            partLst = gen.split(":")
+            # First - port name, second - type with inout type
+            if len(partLst) > 1:
+                portName = partLst[0].strip()
+                typeWords = partLst[1].split()
+                portInout = typeWords[0]
+                portType = " ".join(typeWords[1:])
+                self.addInoutStr(portName, portType, portInout)
 
     def parseEntity(self, entityFile):
+        entityStr = ""
         with open(entityFile, "r") as f:
             # Entity begining searching
             entNameRE = re.compile(r"(?<=entity)[ \t]+[\w]+[ \t]+(?=is)",re.I)
@@ -309,7 +322,6 @@ class componentVHDL(component):
                 self.name = entName.group().strip()
             # Entity end searching
             entEndER = re.compile(r"\bend\b",re.I)
-            entityStr = ""
             entEnd = None
             while(entEnd == None and line != ""):
                 line = f.readline()
@@ -322,10 +334,10 @@ class componentVHDL(component):
         portRE = re.compile(r"\bport\b",re.I);
         entSplit = portRE.split(entityStr)
         # Parsing of generic and port list
-        if (len(entSplit) > 1):
+        if (len(entSplit) == 2):
             self.parseGenerics(entSplit[0])
             self.parsePorts(entSplit[1])
-        else:
+        elif (len(entSplit) == 1):
             self.parsePorts(entSplit[0])
 
 
