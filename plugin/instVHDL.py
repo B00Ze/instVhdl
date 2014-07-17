@@ -325,11 +325,13 @@ class componentVHDL(component):
             entEnd = None
             while(entEnd == None and line != ""):
                 line = f.readline()
-                entEnd = entEndER.search(line)
+                # Comment removing
+                commentBeg = line.find("--")
+                lineSearch = line[:commentBeg]
+                entEnd = entEndER.search(lineSearch)
                 if (entEnd == None):
-                    # Comment removing and adding to entity string
-                    commentBeg = line.find("--")
-                    entityStr += line[:commentBeg]
+                    # Adding to entity string
+                    entityStr += lineSearch
 
         portRE = re.compile(r"\bport\b",re.I);
         entSplit = portRE.split(entityStr)
