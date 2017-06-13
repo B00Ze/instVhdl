@@ -1,5 +1,4 @@
 language: python
   - "2.7"
   - "3.6"
-script:
-  - python -m pytest -v
+script: pytest
