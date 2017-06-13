@@ -1,3 +1,4 @@
+[![BCH compliance](https://bettercodehub.com/edge/badge/B00Ze/instVhdl?branch=master)](https://bettercodehub.com/)
 <h2>Plugin description</h2>
 The main purpose of instVHDL script is insertion of one VHDL component into another file.
 
