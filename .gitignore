@@ -1,0 +1,9 @@
+*
+!tests/
+!plugin/
+!*.py
+!*.md
+!*.txt
+!*.vim
+!*.yml
+!.gitignore
