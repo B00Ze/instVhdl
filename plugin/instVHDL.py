@@ -104,7 +104,7 @@ class component(object):
 
     def __init__(self,name):
         self.name = name
-        self.lib = "None_lib"
+        self.lib = "Default_lib"
         self.genericList = []
         self.inoutList = []
         self.portMaxLen = 0
