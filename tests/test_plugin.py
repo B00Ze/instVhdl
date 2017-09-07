@@ -102,3 +102,19 @@ def tests_port_inout_vhdl_aligned():
             assert inout_position > 0
             assert aligned[inout_position+inout_colon_offset - 1] == ' '
 
+def tests_component_creation():
+    c_name = "c_name"
+
+    c = instVHDL.component(c_name)
+
+    assert c.getName() == c_name
+    assert len(c.getLib()) > 0 
+    assert len(c.getGeneric()) == 0
+
+    c_name = "new_name"
+    c.setName(c_name)
+    assert c.getName() == c_name
+
+    c_lib = "c_lib"
+    c.setLib(c_lib)
+    assert c.getLib() == c_lib
