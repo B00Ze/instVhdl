@@ -193,3 +193,38 @@ def tests_component_generic_add(dummy_component, random_generic_list):
     for port in random_generic_list:
         assert port.getName() in port_names
 
+NOT_ELEMENT_TEXT =  """ 
+entity not_element is
+    port (
+        A : in std_logic;
+        nA : out std_logic
+    );
+end not_element;
+
+architecture impl of not_element is
+begin
+
+    nA <= not A;
+
+end impl; """
+
+@pytest.fixture()
+def simple_not():
+    filename = "simple.vhd"
+    simple_lines = NOT_ELEMENT_TEXT
+    with open(filename, 'w') as simple:
+        simple.write(simple_lines)
+
+    yield filename
+
+    import os
+    os.remove(filename)
+
+def tests_add_to_empty_file(simple_not):
+    out_filename = "out.vhd"
+    out_line = 0
+    with open(out_filename, 'w') as out_file:
+        out_file.write(' ')
+
+    instVHDL.instantiateEntityVHDL(simple_not, out_filename, out_line)
+
