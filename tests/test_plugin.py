@@ -226,5 +226,12 @@ def tests_add_to_empty_file(simple_not):
     with open(out_filename, 'w') as out_file:
         out_file.write(' ')
 
-    instVHDL.instantiateEntityVHDL(simple_not, out_filename, out_line)
+    instVHDL.instantiateEntity(simple_not, out_filename, out_line)
+
+    with open(out_filename, 'r') as out_file:
+        intstantiated = out_file.read()
+
+    assert "not_element" in intstantiated
+    assert "port map" in intstantiated
+    assert intstantiated.count('=>') == 2
 
