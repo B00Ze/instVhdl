@@ -79,21 +79,33 @@ def test_generic_port_vhdl_default(generic_port_vhdl):
     test_str = TEST_JOIN_SIGN.join(p.getStrAligned(alignment))
     assert ":=" not in test_str
 
-def tests_port_inout():
-    p_name = "p_name"
-    p_type = "p_type"
-    p_inout = "p_inout"
+@pytest.fixture
+def port_inout():
+    p_name  = DEFAULT_P_NAME
+    p_type  = DEFAULT_P_TYPE
+    p_inout = DEFAULT_P_DEFAULT
     p = instVHDL.inoutPort(p_name, p_type, p_inout)
-    assert p.getName() == p_name
-    assert p.getType() == p_type
-    assert p.getInout() == p_inout
+    return p
 
-def tests_port_inout_vhdl_aligned():
-    p_name = "p_name"
-    p_type = "p_type"
-    p_inout = "p_inout"
 
+def tests_port_inout(port_inout):
+    p = port_inout
+    assert p.getName()  == DEFAULT_P_NAME
+    assert p.getType()  == DEFAULT_P_TYPE
+    assert p.getInout() == DEFAULT_P_DEFAULT
+
+@pytest.fixture
+def port_inout_vhdl():
+    p_name  = DEFAULT_P_NAME
+    p_type  = DEFAULT_P_TYPE
+    p_inout = DEFAULT_P_DEFAULT
     p = instVHDL.inoutPortVHDL(p_name, p_type, p_inout)
+    return p
+
+def tests_port_inout_vhdl_aligned(port_inout_vhdl):
+    p = port_inout_vhdl
+    p_name  = DEFAULT_P_NAME
+    p_inout = DEFAULT_P_DEFAULT
 
     alignments = (0,  33,  len(p_inout), len(p_inout)-1)
     inout_alignments = (0,  33, len(p_name), len(p_name)-1,  len(p_inout), len(p_inout)-1)
@@ -105,12 +117,15 @@ def tests_port_inout_vhdl_aligned():
             aligned = TEST_JOIN_SIGN.join(p.getStrAligned(alignment, inout_alignment))
 
             assert p_name in aligned
-            assert aligned[colon_position] == ':'
+            assert aligned[colon_position] == ':', \
+                    "Port name not aligned: {}, {}".format(p_name, alignment)
             assert p_inout in aligned
 
             inout_position = aligned.find(p_inout)
-            assert inout_position > 0
-            assert aligned[inout_position+inout_colon_offset - 1] == ' '
+            assert inout_position > 0, \
+                    "Port name not found in aligned representation: {}, {}".format(p_inout, aligned)
+            assert aligned[inout_position+inout_colon_offset - 1] == ' ', \
+                    "Inout not aligned to {}".format(inout_alignment)
 
 DEFAULT_C_NAME = "c_name"
 @pytest.fixture()
@@ -144,7 +159,7 @@ def random_name():
     return ''.join(random.choice(valid_sumbols) for x in range(name_length))
 
 @pytest.fixture()
-def generic_list():
+def random_generic_list():
     MAX_LIST_LENGTH = 20
     out = []
     for _ in range(random.randint(3, MAX_LIST_LENGTH)):
@@ -155,8 +170,26 @@ def generic_list():
         out.append(p)
     return out
 
-def tests_component_generic_add(generic_list):
-    pass
-#    for generic in generic_list:
-#        assert generic.getName() in
+def tests_component_generic_add(dummy_component, random_generic_list):
+    for port in random_generic_list:
+        dummy_component.addGeneric(port)
+    ports  =  dummy_component.getGeneric()
+
+    assert len(ports) == len(random_generic_list)
+    for port in random_generic_list:
+        assert port in ports
+
+    dummy_component.setGeneric([])
+    assert len(dummy_component.getGeneric()) == 0
+
+    for port in random_generic_list:
+        dummy_component.addGenericStr(port.getName(), port.getType(), port.getDefault())
+
+    port_names  =  []
+    for port in dummy_component.getGeneric():
+        port_names.append(port.getName())
+
+    assert len(ports) == len(random_generic_list)
+    for port in random_generic_list:
+        assert port.getName() in port_names
 
