@@ -256,7 +256,12 @@ class componentVHDL(component):
         return strOut
 
     def parseLib(self, fileName):
-        libName = re.compile(r"\\[\w]+_lib\\",re.I)
+        import os
+        separator = os.path.sep
+        if separator ==  '\\':
+            separator = r'\\'
+        libRe = separator + r"[\w]+_lib" + separator
+        libName = re.compile(libRe, re.I)
         resLib = libName.search(fileName)
         if resLib != None:
             self.setLib(resLib.group()[1:-1])
