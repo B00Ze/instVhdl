@@ -129,19 +129,12 @@ class component(object):
             self.portMaxLen = strLen
         self.genericList.append(genericPort)
 
-    def addGeneric(self,genericPort):
-        strLen = len(genericPort.getName())
-        if strLen>self.portMaxLen:
-            self.portMaxLen = strLen
-        self.genericList.append(genericPort)
-
     def addGenericStr(self,portName,portType,defaultValue):
         tmp = genericPort(portName,portType,defaultValue)
         strLen = len(portName)
         if strLen>self.portMaxLen:
             self.portMaxLen = strLen
         self.genericList.append(tmp)
-
 
     def setGeneric(self,genericList):
         for inout in genericList:
@@ -348,17 +341,11 @@ class componentVHDL(component):
             self.parsePorts(entSplit[0])
 
 
-
-
     def parseFile(self, fileName):
         # Getting library
         self.parseLib(fileName)
         # Getting entity content
         self.parseEntity(fileName)
-
-def instantiateEntity(entityFileName,bufferFileName,currLine):
-    if entityFileName[-4:]=='.vhd':
-        instantiateEntityVHDL(entityFileName,bufferFileName,currLine)
 
 def instantiateEntityVHDL(entityFileName,bufferFileName,currLine):
     newInst = componentVHDL("")
@@ -436,9 +423,13 @@ def instantiateEntityVHDL(entityFileName,bufferFileName,currLine):
         file.write(bytearray(strOut.encode('UTF-8')))
 
 
+def instantiateEntity(entityFileName,bufferFileName,currLine):
+    if entityFileName[-4:]=='.vhd':
+        instantiateEntityVHDL(entityFileName,bufferFileName,currLine)
+
 import sys
 if __name__ == "__main__":
-    strUsing = "Using of script:\n\tpython instantiateEntityVHDL.py input_file output_file str_num"
+    strUsing = "Using of script:\n\tpython instVHDL.py input_file output_file str_num"
 
     if len(sys.argv)!=4:
         print(strUsing)
