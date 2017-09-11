@@ -219,7 +219,7 @@ def testsample_directory():
     return TEST_SAMPLES_DIR
 
 @pytest.fixture()
-def file_preparator(testsample_directory):
+def file_writer(testsample_directory):
     files = []
 
     def create(filename="tmp.vhd", text=''):
@@ -245,17 +245,17 @@ def file_reader(testsample_directory):
 
 
 @pytest.fixture()
-def simple_not(file_preparator):
+def simple_not(file_writer):
     filename = "simple.vhd"
     simple_lines = NOT_ELEMENT_TEXT
-    yield file_preparator(filename, simple_lines)
+    yield file_writer(filename, simple_lines)
 
 
 
-def tests_add_to_empty_file(file_preparator, file_reader, simple_not):
+def tests_add_to_empty_file(file_writer, file_reader, simple_not):
     out_filename = "out.vhd"
     out_line = 0
-    full_out_path = file_preparator(out_filename, ' ')
+    full_out_path = file_writer(out_filename, ' ')
 
     instVHDL.instantiateEntity(simple_not, full_out_path, out_line)
 
