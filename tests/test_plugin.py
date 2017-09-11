@@ -193,7 +193,7 @@ def tests_component_generic_add(dummy_component, random_generic_list):
     for port in random_generic_list:
         assert port.getName() in port_names
 
-NOT_ELEMENT_TEXT =  """ 
+NOT_ELEMENT_TEXT =  """
 entity not_element is
     port (
         A : in std_logic;
@@ -210,12 +210,19 @@ end impl; """
 
 
 import os
+def create_subdirs(full_filename):
+    dirs = os.path.split(full_filename)
+    if dirs[-1].endswith('.vhd'):
+        dirs = dirs[:-1]
+    directory_path = os.path.join(*dirs)
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+
 
 @pytest.fixture()
 def testsample_directory():
     TEST_SAMPLES_DIR = os.path.join(os.getcwd(), "test_samples")
-    if not os.path.exists(TEST_SAMPLES_DIR):
-        os.makedirs(TEST_SAMPLES_DIR)
+    create_subdirs(TEST_SAMPLES_DIR)
     return TEST_SAMPLES_DIR
 
 @pytest.fixture()
@@ -224,6 +231,7 @@ def file_writer(testsample_directory):
 
     def create(filename="tmp.vhd", text=''):
         full_path = os.path.join(testsample_directory, filename)
+        create_subdirs(full_path)
         with open(full_path, 'w') as rw_file:
             rw_file.write(text)
         files.append(full_path)
@@ -237,12 +245,11 @@ def file_writer(testsample_directory):
 def file_reader(testsample_directory):
     def read_file(filename="tmp.vhd"):
         full_path = os.path.join(testsample_directory, filename)
+        create_subdirs(full_path)
         with open(full_path, 'r') as read_file:
             data = read_file.read()
         return data
     yield read_file
-
-
 
 @pytest.fixture()
 def simple_not(file_writer):
@@ -264,4 +271,104 @@ def tests_add_to_empty_file(file_writer, file_reader, simple_not):
     assert "not_element" in instantiated
     assert "port map" in instantiated
     assert instantiated.count('=>') == 2
+
+def tests_add_to_not(file_reader, file_writer, simple_not):
+    out_filename  = "not_out.vhd"
+    full_out_path = file_writer(out_filename, NOT_ELEMENT_TEXT)
+    out_line = 12
+
+    instVHDL.instantiateEntity(simple_not, full_out_path, out_line)
+
+    instantiated = file_reader(out_filename)
+
+    assert "not_element" in instantiated
+    assert "port map" in instantiated
+    assert instantiated.count('=>') == 2
+    assert "component" in instantiated
+    assert "end component" in instantiated
+    assert "FOR ALL" in instantiated
+    assert "USE ENTITY" in instantiated
+
+
+def tests_add_library(file_reader, file_writer):
+    input_libname = "inp_lib"
+    input_filename  = os.path.join(input_libname, "not_lib_in.vhd")
+    full_input_path = file_writer(input_filename, NOT_ELEMENT_TEXT)
+
+    output_libname = "output_lib"
+    output_libtext = "LIBRARY "+output_libname+";\n"+NOT_ELEMENT_TEXT
+    out_filename  = "not_lib_out.vhd"
+    full_out_path = file_writer(out_filename, output_libtext)
+
+    out_line = 12
+
+    instVHDL.instantiateEntity(full_input_path, full_out_path, out_line)
+
+    instantiated = file_reader(out_filename)
+
+    assert "not_element" in instantiated
+    assert "port map" in instantiated
+    assert instantiated.count('=>') == 2
+    assert "component" in instantiated
+    assert "end component" in instantiated
+    assert "FOR ALL" in instantiated
+    assert "USE ENTITY" in instantiated
+    assert output_libname in instantiated
+    assert input_libname in instantiated
+
+
+def tests_add_to_not(file_reader, file_writer, simple_not):
+    out_filename  = "not_double_out.vhd"
+    full_out_path = file_writer(out_filename, NOT_ELEMENT_TEXT)
+    out_line = 12
+
+    instVHDL.instantiateEntity(simple_not, full_out_path, out_line)
+    out_line = 25
+    instVHDL.instantiateEntity(simple_not, full_out_path, out_line)
+
+    instantiated = file_reader(out_filename)
+
+    assert "not_element" in instantiated
+    assert instantiated.count("port map") == 2
+    assert instantiated.count('=>') == 4
+
+NOT_VECTOR_GENERIC_TEXT =  """
+entity not_element is
+    generic (
+        CLK_FREQ     : natural := 24840000; -- Clock frequency in Hz
+        DATA_BIT_LEN : natural := 8         -- Vector bit length
+      );
+    port (
+        A : in std_logic(DATA_BIT_LEN-1 downto 0);
+        nA : out std_logic(DATA_BIT_LEN-1 downto 0)
+    );
+end not_element;
+
+architecture impl of not_element is
+begin
+
+    nA <= not A;
+
+end impl; """
+
+def tests_add_generic_to_not(file_reader, file_writer):
+    input_filename  = "not_generic_in.vhd"
+    full_input_path = file_writer(input_filename, NOT_VECTOR_GENERIC_TEXT)
+
+    out_filename  = "not_generic_out.vhd"
+    full_out_path = file_writer(out_filename, NOT_ELEMENT_TEXT)
+    out_line = 12
+
+    instVHDL.instantiateEntity(full_input_path, full_out_path, out_line)
+
+    instantiated = file_reader(out_filename)
+
+    assert "not_element" in instantiated
+    assert "port map" in instantiated
+    assert instantiated.count('=>') == 4
+    assert "component" in instantiated
+    assert "end component" in instantiated
+    assert "FOR ALL" in instantiated
+    assert "USE ENTITY" in instantiated
+
 
