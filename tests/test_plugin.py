@@ -208,30 +208,60 @@ begin
 
 end impl; """
 
+
+import os
+
 @pytest.fixture()
-def simple_not():
+def testsample_directory():
+    TEST_SAMPLES_DIR = os.path.join(os.getcwd(), "test_samples")
+    if not os.path.exists(TEST_SAMPLES_DIR):
+        os.makedirs(TEST_SAMPLES_DIR)
+    return TEST_SAMPLES_DIR
+
+@pytest.fixture()
+def file_preparator(testsample_directory):
+    files = []
+
+    def create(filename="tmp.vhd", text=''):
+        full_path = os.path.join(testsample_directory, filename)
+        with open(full_path, 'w') as rw_file:
+            rw_file.write(text)
+        files.append(full_path)
+        return full_path
+    yield create
+
+#    for filename in files:
+#        os.remove(filename)
+
+@pytest.fixture()
+def file_reader(testsample_directory):
+    def read_file(filename="tmp.vhd"):
+        full_path = os.path.join(testsample_directory, filename)
+        with open(full_path, 'r') as read_file:
+            data = read_file.read()
+        return data
+    yield read_file
+
+
+
+@pytest.fixture()
+def simple_not(file_preparator):
     filename = "simple.vhd"
     simple_lines = NOT_ELEMENT_TEXT
-    with open(filename, 'w') as simple:
-        simple.write(simple_lines)
+    yield file_preparator(filename, simple_lines)
 
-    yield filename
 
-    import os
-    os.remove(filename)
 
-def tests_add_to_empty_file(simple_not):
+def tests_add_to_empty_file(file_preparator, file_reader, simple_not):
     out_filename = "out.vhd"
     out_line = 0
-    with open(out_filename, 'w') as out_file:
-        out_file.write(' ')
+    full_out_path = file_preparator(out_filename, ' ')
 
-    instVHDL.instantiateEntity(simple_not, out_filename, out_line)
+    instVHDL.instantiateEntity(simple_not, full_out_path, out_line)
 
-    with open(out_filename, 'r') as out_file:
-        intstantiated = out_file.read()
+    instantiated = file_reader(out_filename)
 
-    assert "not_element" in intstantiated
-    assert "port map" in intstantiated
-    assert intstantiated.count('=>') == 2
+    assert "not_element" in instantiated
+    assert "port map" in instantiated
+    assert instantiated.count('=>') == 2
 
