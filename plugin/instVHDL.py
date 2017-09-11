@@ -347,80 +347,99 @@ class componentVHDL(component):
         # Getting entity content
         self.parseEntity(fileName)
 
+class EntityInstantiator():
+    def __init__(self):
+        self.libRe = re.compile(r"(?<=library)[\w \t]+",re.I)
+        self.compRe = re.compile(r"end[\t ]+component",re.I)
+        self.useRe = re.compile(r"USE[ \t]+ENTITY",re.I)
+        self.archRe = re.compile(r"begin",re.I)
+        self.libExist = False
+        self.libLine = -1
+        self.archLine = -1
+        self.compLine = -1
+        self.useLine = -1
+
+        self._currBuffer = []
+
+    def parseSourceFile(self, sourceFileName):
+        self.sourceInst = componentVHDL("")
+        self.sourceInst.parseFile(sourceFileName)
+    
+    def parseTargetFile(self, destinationFileName):
+        with open(destinationFileName,"r+") as buffFile:
+            self._currBuffer = buffFile.readlines()
+
+        for i in range(len(self._currBuffer)):
+            line = self._currBuffer[i]
+            resLib = self.libRe.search(line)
+            if resLib != None:
+                self.libLine = i
+                lib = resLib.group()
+                lib = lib.strip()
+                if lib.lower() == self.sourceInst.getLib().lower():
+                    self.libExist = True
+            resComp = self.compRe.search(line)
+            if resComp != None:
+                self.compLine = i
+            useComp = self.useRe.search(line)
+            if useComp != None:
+                self.useLine = i
+            resArch = self.archRe.match(line)
+            if resArch != None:
+                self.archLine = i
+                break
+
+    def mergeSourceTarget(self, currLine):
+        newFileBuff = []
+        strPtr = 0
+        #Library declaration
+        if (self.libLine >= 0) and not(self.libExist):
+            newFileBuff += self._currBuffer[:self.libLine+1]
+            newFileBuff += self.sourceInst.getStrLib()
+            strPtr = self.libLine+1
+        #Component declaration
+        if self.compLine>=0:
+            newFileBuff += self._currBuffer[strPtr:self.compLine+1]
+            newFileBuff += self.sourceInst.getStrComponent()
+            strPtr = self.compLine+1
+        elif self.archLine>= 0:
+            newFileBuff += self._currBuffer[strPtr:self.archLine]
+            newFileBuff += self.sourceInst.getStrComponent()
+            strPtr = self.archLine
+        #Component mapping before architecture
+        if self.useLine>=0:
+            newFileBuff += self._currBuffer[strPtr:self.useLine+1]
+            newFileBuff += self.sourceInst.getStrUse()
+            strPtr = self.useLine+1
+        elif self.archLine>= 0:
+            newFileBuff += self._currBuffer[strPtr:self.archLine]
+            newFileBuff += self.sourceInst.getStrUse()
+            strPtr = self.archLine
+        #Block instance writing
+        if currLine>=0:
+            newFileBuff += self._currBuffer[strPtr:currLine-1]
+            newFileBuff += self.sourceInst.getStrMap()
+            strPtr = currLine-1
+        newFileBuff += self._currBuffer[strPtr:]
+
+        strOut = ''.join(newFileBuff)
+
+        return strOut
+
+
+    def instantiate(self, entityFileName,bufferFileName,currLine):
+        self.parseSourceFile(entityFileName)
+        self.parseTargetFile(bufferFileName)
+
+        strOut = self.mergeSourceTarget(currLine)
+
+        with open(bufferFileName,"rb+") as file:
+            file.write(bytearray(strOut.encode('UTF-8')))
+        
+
 def instantiateEntityVHDL(entityFileName,bufferFileName,currLine):
-    newInst = componentVHDL("")
-    newInst.parseFile(entityFileName)
-    buffFile = open(bufferFileName,"r+")
-    currBuffer = buffFile.readlines()
-    buffFile.close()
-    libRe = re.compile(r"(?<=library)[\w \t]+",re.I)
-    entRe = re.compile(r"entity",re.I)
-    compRe = re.compile(r"end[\t ]+component",re.I)
-    useRe = re.compile(r"USE[ \t]+ENTITY",re.I)
-    archRe = re.compile(r"begin",re.I)
-    libLine = -1
-    libExist = False
-    archLine = -1
-    compLine = -1
-    useLine = -1
-    libLower = newInst.getLib().lower()
-    for i in range(len(currBuffer)):
-        line = currBuffer[i]
-        resLib = libRe.search(line)
-        if resLib != None:
-            libLine = i
-            lib = resLib.group()
-            lib = lib.strip()
-            if lib.lower() == libLower:
-                libExist = True
-        resComp = compRe.search(line)
-        if resComp != None:
-            compLine = i
-        useComp = useRe.search(line)
-        if useComp != None:
-            useLine = i
-        resArch = archRe.match(line)
-        if resArch != None:
-            archLine = i
-            break
-    newFileBuff = []
-    strPtr = 0
-    #Library declaration
-    if (libLine >= 0) and not(libExist):
-        newFileBuff += currBuffer[:libLine+1]
-        newFileBuff += newInst.getStrLib()
-        strPtr = libLine+1
-    #Component declaration
-    if compLine>=0:
-        newFileBuff += currBuffer[strPtr:compLine+1]
-        newFileBuff += newInst.getStrComponent()
-        strPtr = compLine+1
-    elif archLine>= 0:
-        newFileBuff += currBuffer[strPtr:archLine]
-        newFileBuff += newInst.getStrComponent()
-        strPtr = archLine
-    #Component mapping before architecture
-    if useLine>=0:
-        newFileBuff += currBuffer[strPtr:useLine+1]
-        newFileBuff += newInst.getStrUse()
-        strPtr = useLine+1
-    elif archLine>= 0:
-        newFileBuff += currBuffer[strPtr:archLine]
-        newFileBuff += newInst.getStrUse()
-        strPtr = archLine
-    #Block instance writing
-    if currLine>=0:
-        newFileBuff += currBuffer[strPtr:currLine-1]
-        newFileBuff += newInst.getStrMap()
-        strPtr = currLine-1
-    newFileBuff += currBuffer[strPtr:]
-
-    strOut = ""
-    for b in newFileBuff:
-        strOut += b
-
-    with open(bufferFileName,"rb+") as file:
-        file.write(bytearray(strOut.encode('UTF-8')))
+    instantiator = EntityInstantiator()
+    instantiator.instantiate(entityFileName,bufferFileName,currLine)
 
 
 def instantiateEntity(entityFileName,bufferFileName,currLine):
