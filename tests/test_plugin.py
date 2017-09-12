@@ -21,6 +21,14 @@ def test_port_creation():
     assert p.getName() == p_name
     assert p.getType() == p_type
 
+    p_name = random_name()
+    p.setName(p_name)
+    assert p.getName() == p_name
+
+    p_type = random_name()
+    p.setType(p_type)
+    assert p.getType() == p_type
+
 
 DEFAULT_P_NAME    = "p_name"
 DEFAULT_P_TYPE    = "p_type"
@@ -371,4 +379,34 @@ def tests_add_generic_to_not(file_reader, file_writer):
     assert "FOR ALL" in instantiated
     assert "USE ENTITY" in instantiated
 
+import sys
+from pytest_mock import mocker
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+
+def tests_cmd_line_exit(mocker):
+    cmd_args = []
+    fake_stdout = mocker.patch("sys.stdout", new=StringIO())
+    fake_inst = mocker.patch.object(instVHDL, "instantiateEntity")
+
+    with pytest.raises(SystemExit) as exit_raise:
+        instVHDL.command_line_interface(cmd_args)
+
+    assert "Using of script" in fake_stdout.getvalue()
+    fake_inst.assert_not_called()
+    mocker.resetall()
+
+def tests_cmd_line_run(mocker):
+    sourceName = "abc"
+    targetName = "efg"
+    line = "100"
+    cmd_args = ['', sourceName, targetName, line]
+    fake_inst = mocker.patch.object(instVHDL, "instantiateEntity")
+
+    instVHDL.command_line_interface(cmd_args)
+
+    fake_inst.assert_called_once_with(sourceName, targetName, int(line))
+    mocker.resetall()
 
