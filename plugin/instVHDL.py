@@ -30,8 +30,6 @@ class port(object):
     def setType(self,portType):
         self.portType = portType
 
-    def getStrList(self):
-        pass
 
 class genericPort(port):
     def __init__(self,portName,portType,defaultValue):
@@ -43,9 +41,6 @@ class genericPort(port):
 
     def setDefault(self,defaultValue):
         self.defaultValue = defaultValue
-
-    def getStrAligned(self,nameMax):
-        pass
 
 class genericPortVHDL(genericPort):
     def __init__(self,portName,portType,defaultValue):
@@ -79,9 +74,6 @@ class inoutPort(port):
 
     def setInout(self,inoutType):
         self.inoutType = inoutType
-
-    def getStrAligned(self,nameMax,inoutMax):
-        pass
 
 class inoutPortVHDL(inoutPort):
     def __init__(self,portName,portType,inoutType):
@@ -174,15 +166,6 @@ class component(object):
             if strInoutLen>self.inoutMaxLen:
                 self.portMaxLen = strInoutLen
         self.inoutList = inoutList
-
-
-    def getStrLib(self):
-        pass
-
-    def getStrMap(self):
-        pass
-    def parseFile(self,fileName):
-        pass
 
 class componentVHDL(component):
 
