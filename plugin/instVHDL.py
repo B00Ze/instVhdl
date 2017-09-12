@@ -93,7 +93,6 @@ class component(object):
         self.portMaxLen = 0
         self.inoutMaxLen = 0
 
-
     def getName(self):
         return self.name
 
@@ -129,15 +128,6 @@ class component(object):
     def getGeneric(self):
         return self.genericList
 
-    def addInout(self,inoutPort):
-        strNameLen = len(inoutPort.getName())
-        if strNameLen>self.portMaxLen:
-            self.portMaxLen = strNameLen
-        strInoutLen = len(inoutPort.inoutMaxLen())
-        if strInoutLen>self.inoutMaxLen:
-            self.inoutMaxLen = strInoutLen
-        self.inoutList.append(inoutPort)
-
     def addInoutStr(self,portName,portType,inoutType):
         strNameLen = len(portName)
         if strNameLen>self.portMaxLen:
@@ -147,16 +137,6 @@ class component(object):
             self.inoutMaxLen = strInoutLen
         tmp = inoutPortVHDL(portName,portType,inoutType)
         self.inoutList.append(tmp)
-
-    def setInout(self,inoutList):
-        for inout in inoutList:
-            strNameLen = len(inout.getName())
-            if strNameLen>self.portMaxLen:
-                self.portMaxLen = strNameLen
-            strInoutLen = len(inout.getInout())
-            if strInoutLen>self.inoutMaxLen:
-                self.portMaxLen = strInoutLen
-        self.inoutList = inoutList
 
 class componentVHDL(component):
 
