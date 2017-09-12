@@ -388,41 +388,52 @@ class EntityInstantiator():
             if resArch != None:
                 self.archLine = i
                 break
+    
+    def _mergeLibraryDeclaration(self):
+        if (self.libLine >= 0) and not(self.libExist):
+            self._mergeBuff += self._currBuffer[:self.libLine+1]
+            self._mergeBuff += self.sourceInst.getStrLib()
+            self.strPtr = self.libLine+1
+            
+    def _mergeComponentDeclaration(self):
+        if self.compLine>=0:
+            self._mergeBuff += self._currBuffer[self.strPtr:self.compLine+1]
+            self._mergeBuff += self.sourceInst.getStrComponent()
+            self.strPtr = self.compLine+1
+        elif self.archLine>= 0:
+            self._mergeBuff += self._currBuffer[self.strPtr:self.archLine]
+            self._mergeBuff += self.sourceInst.getStrComponent()
+            self.strPtr = self.archLine
+
+    def _mergeComponentMap(self):
+        if self.useLine>=0:
+            self._mergeBuff += self._currBuffer[self.strPtr:self.useLine+1]
+            self._mergeBuff += self.sourceInst.getStrUse()
+            self.strPtr = self.useLine+1
+        elif self.archLine>= 0:
+            self._mergeBuff += self._currBuffer[self.strPtr:self.archLine]
+            self._mergeBuff += self.sourceInst.getStrUse()
+            self.strPtr = self.archLine
+
+    def _mergeBlockInstance(self, currLine):
+        if currLine>=0:
+            self._mergeBuff += self._currBuffer[self.strPtr:currLine-1]
+            self._mergeBuff += self.sourceInst.getStrMap()
+            self.strPtr = currLine-1
+
+    def _mergeTargetTail(self):
+        self._mergeBuff += self._currBuffer[self.strPtr:]
 
     def mergeSourceTarget(self, currLine):
-        newFileBuff = []
-        strPtr = 0
-        #Library declaration
-        if (self.libLine >= 0) and not(self.libExist):
-            newFileBuff += self._currBuffer[:self.libLine+1]
-            newFileBuff += self.sourceInst.getStrLib()
-            strPtr = self.libLine+1
-        #Component declaration
-        if self.compLine>=0:
-            newFileBuff += self._currBuffer[strPtr:self.compLine+1]
-            newFileBuff += self.sourceInst.getStrComponent()
-            strPtr = self.compLine+1
-        elif self.archLine>= 0:
-            newFileBuff += self._currBuffer[strPtr:self.archLine]
-            newFileBuff += self.sourceInst.getStrComponent()
-            strPtr = self.archLine
-        #Component mapping before architecture
-        if self.useLine>=0:
-            newFileBuff += self._currBuffer[strPtr:self.useLine+1]
-            newFileBuff += self.sourceInst.getStrUse()
-            strPtr = self.useLine+1
-        elif self.archLine>= 0:
-            newFileBuff += self._currBuffer[strPtr:self.archLine]
-            newFileBuff += self.sourceInst.getStrUse()
-            strPtr = self.archLine
-        #Block instance writing
-        if currLine>=0:
-            newFileBuff += self._currBuffer[strPtr:currLine-1]
-            newFileBuff += self.sourceInst.getStrMap()
-            strPtr = currLine-1
-        newFileBuff += self._currBuffer[strPtr:]
+        self._mergeBuff = []
+        self.strPtr = 0
+        self._mergeLibraryDeclaration()
+        self._mergeComponentDeclaration()
+        self._mergeComponentMap()
+        self._mergeBlockInstance(currLine)
+        self._mergeTargetTail()
 
-        strOut = ''.join(newFileBuff)
+        strOut = ''.join(self._mergeBuff)
 
         return strOut
 
