@@ -412,12 +412,15 @@ def instantiateEntity(entityFileName,bufferFileName,currLine):
         instantiateEntityVHDL(entityFileName,bufferFileName,currLine)
 
 import sys
-if __name__ == "__main__":
+def command_line_interface():
     strUsing = "Using of script:\n\tpython instVHDL.py input_file output_file str_num"
 
     if len(sys.argv)!=4:
         print(strUsing)
         sys.exit(2)
     instantiateEntity(sys.argv[1],sys.argv[2],int(sys.argv[3]))
+
+if __name__ == "__main__":
+    command_line_interface()
 
 
