@@ -58,12 +58,6 @@ class genericPortVHDL(genericPort):
     def getStrList(self):
         return [self.getName()+" : "+self.getType()+";"]
 
-    def __str__(self):
-        strOut = self.getName()+" : "+self.getType()
-        if (self.getDefault() != ""):
-            strOut += ":= "+self.getDefault()
-        return strOut+";\n"
-
 class inoutPort(port):
     def __init__(self,portName,portType,inoutType):
         port.__init__(self,portName,portType)
@@ -88,9 +82,6 @@ class inoutPortVHDL(inoutPort):
 
     def getStrList(self):
         return [self.getName()+" : "+self.getType()+";"]
-
-    def __str__(self):
-        return self.getName()+" : "+self.getInout()+' '+self.getType()+";\n"
 
 class component(object):
 
