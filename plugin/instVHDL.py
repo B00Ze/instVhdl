@@ -215,7 +215,7 @@ class componentVHDL(component):
         libRe = separator + r"[\w]+_lib" + separator
         libName = re.compile(libRe, re.I)
         resLib = libName.search(fileName)
-        if resLib != None:
+        if resLib is not None:
             self.setLib(resLib.group()[1:-1])
         else:
             self.setLib("SomeLib")
@@ -270,23 +270,23 @@ class componentVHDL(component):
             entNameRE = re.compile(r"(?<=entity)[ \t]+[\w]+[ \t]+(?=is)", re.I)
             entName = None
             line = None
-            while (entName == None and line != ""):
+            while (entName is None and line != ""):
                 line = f.readline()
                 entName = entNameRE.search(line)
-            if entName == None:
+            if entName is None:
                 self.name = "someEnt"
             else:
                 self.name = entName.group().strip()
             # Entity end searching
             entEndER = re.compile(r"\bend\b", re.I)
             entEnd = None
-            while(entEnd == None and line != ""):
+            while(entEnd is None and line != ""):
                 line = f.readline()
                 # Comment removing
                 commentBeg = line.find("--")
                 lineSearch = line[:commentBeg]
                 entEnd = entEndER.search(lineSearch)
-                if (entEnd == None):
+                if (entEnd is None):
                     # Adding to entity string
                     entityStr += lineSearch
 
@@ -331,20 +331,20 @@ class EntityInstantiator():
         for i in range(len(self._currBuffer)):
             line = self._currBuffer[i]
             resLib = self.libRe.search(line)
-            if resLib != None:
+            if resLib is not None:
                 self.libLine = i
                 lib = resLib.group()
                 lib = lib.strip()
                 if lib.lower() == self.sourceInst.getLib().lower():
                     self.libExist = True
             resComp = self.compRe.search(line)
-            if resComp != None:
+            if resComp is not None:
                 self.compLine = i
             useComp = self.useRe.search(line)
-            if useComp != None:
+            if useComp is not None:
                 self.useLine = i
             resArch = self.archRe.match(line)
-            if resArch != None:
+            if resArch is not None:
                 self.archLine = i
                 break
 
