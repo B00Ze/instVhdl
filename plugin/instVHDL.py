@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Name:        VHDL instantiation script
 # Purpose:  Using with VIM
 #
@@ -8,9 +8,10 @@
 # Created:     25.03.2013
 # Copyright:   (c) BooZe 2013
 # Licence:     BSD
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import re
+import sys
 
 
 class port(object):
@@ -54,7 +55,7 @@ class genericPortVHDL(genericPort):
         if strDefault != "":
             strDefault = " := "+strDefault
         return [self.getName()+" "*(nameMax-nameLen)+" : "+self.getType() +
-                    strDefault+";"]
+                strDefault+";"]
 
     def getStrList(self):
         return [self.getName()+" : "+self.getType()+";"]
@@ -182,15 +183,17 @@ class componentVHDL(component):
             strOut += ["\t\tgeneric map (\n"]
             for gen in self.genericList:
                 genNameLen = len(gen.getName())
-                strOut += ["\t\t\t"+gen.getName()+" "*(self.portMaxLen-genNameLen) +
-                            " => "+gen.getName()+",\n"]
+                strOut += ["\t\t\t"+gen.getName() +
+                           " "*(self.portMaxLen-genNameLen) +
+                           " => "+gen.getName()+",\n"]
             strOut[-1] = strOut[-1][:-2]+"\n"
             strOut += ["\t\t)\n"]
         strOut += ["\t\tport map(\n"]
         for inout in self.inoutList:
             inoutNameLen = len(inout.getName())
-            strOut += ["\t\t\t"+inout.getName()+" "*(self.portMaxLen-inoutNameLen) +
-                        " => "+inout.getName()+",\n"]
+            strOut += ["\t\t\t"+inout.getName() +
+                       " "*(self.portMaxLen-inoutNameLen) +
+                       " => "+inout.getName()+",\n"]
         strOut[-1] = strOut[-1][:-2]+"\n"
         strOut += ["\t\t);\n"]
         return strOut
@@ -290,7 +293,7 @@ class componentVHDL(component):
                     # Adding to entity string
                     entityStr += lineSearch
 
-        portRE = re.compile(r"\bport\b", re.I);
+        portRE = re.compile(r"\bport\b", re.I)
         entSplit = portRE.split(entityStr)
         # Parsing of generic and port list
         if (len(entSplit) == 2):
@@ -416,11 +419,10 @@ def instantiateEntity(entityFileName, bufferFileName, currLine):
         instantiateEntityVHDL(entityFileName, bufferFileName, currLine)
 
 
-import sys
-
-
 def command_line_interface(cmd_args):
-    strUsing = "Using of script:\n\tpython instVHDL.py input_file output_file str_num"
+    strUsing = """Using of script:
+    python instVHDL.py input_file output_file str_num
+    """
 
     if len(cmd_args) != 4:
         print(strUsing)
