@@ -12,6 +12,7 @@
 
 import re
 
+
 class port(object):
     def __init__(self, portName, portType):
         self.portName = portName
@@ -25,7 +26,6 @@ class port(object):
 
     def setName(self, portName):
         self.portName = portName
-
 
     def setType(self, portType):
         self.portType = portType
@@ -41,6 +41,7 @@ class genericPort(port):
 
     def setDefault(self, defaultValue):
         self.defaultValue = defaultValue
+
 
 class genericPortVHDL(genericPort):
     def __init__(self, portName, portType, defaultValue):
@@ -58,6 +59,7 @@ class genericPortVHDL(genericPort):
     def getStrList(self):
         return [self.getName()+" : "+self.getType()+";"]
 
+
 class inoutPort(port):
     def __init__(self, portName, portType, inoutType):
         port.__init__(self, portName, portType)
@@ -68,6 +70,7 @@ class inoutPort(port):
 
     def setInout(self, inoutType):
         self.inoutType = inoutType
+
 
 class inoutPortVHDL(inoutPort):
     def __init__(self, portName, portType, inoutType):
@@ -82,6 +85,7 @@ class inoutPortVHDL(inoutPort):
 
     def getStrList(self):
         return [self.getName()+" : "+self.getType()+";"]
+
 
 class component(object):
 
@@ -137,6 +141,7 @@ class component(object):
             self.inoutMaxLen = strInoutLen
         tmp = inoutPortVHDL(portName, portType, inoutType)
         self.inoutList.append(tmp)
+
 
 class componentVHDL(component):
 
@@ -294,12 +299,12 @@ class componentVHDL(component):
         elif (len(entSplit) == 1):
             self.parsePorts(entSplit[0])
 
-
     def parseFile(self, fileName):
         # Getting library
         self.parseLib(fileName)
         # Getting entity content
         self.parseEntity(fileName)
+
 
 class EntityInstantiator():
     def __init__(self):
@@ -318,7 +323,7 @@ class EntityInstantiator():
     def parseSourceFile(self, sourceFileName):
         self.sourceInst = componentVHDL("")
         self.sourceInst.parseFile(sourceFileName)
-    
+
     def parseTargetFile(self, destinationFileName):
         with open(destinationFileName,"r+") as buffFile:
             self._currBuffer = buffFile.readlines()
@@ -342,13 +347,13 @@ class EntityInstantiator():
             if resArch != None:
                 self.archLine = i
                 break
-    
+
     def _mergeLibraryDeclaration(self):
         if (self.libLine >= 0) and not(self.libExist):
             self._mergeBuff += self._currBuffer[:self.libLine+1]
             self._mergeBuff += self.sourceInst.getStrLib()
             self.strPtr = self.libLine+1
-            
+
     def _mergeComponentDeclaration(self):
         if self.compLine>=0:
             self._mergeBuff += self._currBuffer[self.strPtr:self.compLine+1]
@@ -391,16 +396,15 @@ class EntityInstantiator():
 
         return strOut
 
-
     def instantiate(self, entityFileName, bufferFileName, currLine):
         self.parseSourceFile(entityFileName)
         self.parseTargetFile(bufferFileName)
 
         strOut = self.mergeSourceTarget(currLine)
 
-        with open(bufferFileName,"rb+") as file:
+        with open(bufferFileName, "rb+") as file:
             file.write(bytearray(strOut.encode('UTF-8')))
-        
+
 
 def instantiateEntityVHDL(entityFileName, bufferFileName, currLine):
     instantiator = EntityInstantiator()
@@ -411,7 +415,10 @@ def instantiateEntity(entityFileName, bufferFileName, currLine):
     if entityFileName[-4:]=='.vhd':
         instantiateEntityVHDL(entityFileName, bufferFileName, currLine)
 
+
 import sys
+
+
 def command_line_interface(cmd_args):
     strUsing = "Using of script:\n\tpython instVHDL.py input_file output_file str_num"
 
@@ -420,7 +427,6 @@ def command_line_interface(cmd_args):
         sys.exit(2)
     instantiateEntity(cmd_args[1], cmd_args[2], int(cmd_args[3]))
 
+
 if __name__ == "__main__":
     command_line_interface(sys.argv)
-
-
