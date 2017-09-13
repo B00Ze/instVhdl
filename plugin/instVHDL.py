@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Name:        VHDL instantiation script
 # Purpose:  Using with VIM
 #
@@ -8,12 +8,12 @@
 # Created:     25.03.2013
 # Copyright:   (c) BooZe 2013
 # Licence:     BSD
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 import re
 
 class port(object):
-    def __init__(self,portName,portType):
+    def __init__(self, portName, portType):
         self.portName = portName
         self.portType = portType
 
@@ -23,31 +23,31 @@ class port(object):
     def getType(self):
         return self.portType
 
-    def setName(self,portName):
+    def setName(self, portName):
         self.portName = portName
 
 
-    def setType(self,portType):
+    def setType(self, portType):
         self.portType = portType
 
 
 class genericPort(port):
-    def __init__(self,portName,portType,defaultValue):
-        port.__init__(self,portName,portType)
+    def __init__(self, portName, portType, defaultValue):
+        port.__init__(self, portName, portType)
         self.defaultValue = defaultValue
 
     def getDefault(self):
         return self.defaultValue
 
-    def setDefault(self,defaultValue):
+    def setDefault(self, defaultValue):
         self.defaultValue = defaultValue
 
 class genericPortVHDL(genericPort):
-    def __init__(self,portName,portType,defaultValue):
-        genericPort.__init__(self,portName,portType,defaultValue)
+    def __init__(self, portName, portType, defaultValue):
+        genericPort.__init__(self, portName, portType, defaultValue)
         self.defaultValue = defaultValue
 
-    def getStrAligned(self,nameMax):
+    def getStrAligned(self, nameMax):
         nameLen = len(self.getName())
         strDefault = self.getDefault()
         if strDefault != "":
@@ -59,22 +59,22 @@ class genericPortVHDL(genericPort):
         return [self.getName()+" : "+self.getType()+";"]
 
 class inoutPort(port):
-    def __init__(self,portName,portType,inoutType):
-        port.__init__(self,portName,portType)
+    def __init__(self, portName, portType, inoutType):
+        port.__init__(self, portName, portType)
         self.inoutType = inoutType
 
     def getInout(self):
         return self.inoutType
 
-    def setInout(self,inoutType):
+    def setInout(self, inoutType):
         self.inoutType = inoutType
 
 class inoutPortVHDL(inoutPort):
-    def __init__(self,portName,portType,inoutType):
-        inoutPort.__init__(self,portName,portType,inoutType)
+    def __init__(self, portName, portType, inoutType):
+        inoutPort.__init__(self, portName, portType, inoutType)
         self.inoutType = inoutType
 
-    def getStrAligned(self,nameMax,inoutMax):
+    def getStrAligned(self, nameMax, inoutMax):
         nameLen = len(self.getName())
         inoutLen = len(self.getInout())
         return [self.getName()+" "*(nameMax-nameLen)+" : "+self.getInout()+\
@@ -85,7 +85,7 @@ class inoutPortVHDL(inoutPort):
 
 class component(object):
 
-    def __init__(self,name):
+    def __init__(self, name):
         self.name = name
         self.lib = "Default_lib"
         self.genericList = []
@@ -105,20 +105,20 @@ class component(object):
     def setLib(self, lib):
         self.lib = lib
 
-    def addGeneric(self,genericPort):
+    def addGeneric(self, genericPort):
         strLen = len(genericPort.getName())
         if strLen>self.portMaxLen:
             self.portMaxLen = strLen
         self.genericList.append(genericPort)
 
-    def addGenericStr(self,portName,portType,defaultValue):
-        tmp = genericPort(portName,portType,defaultValue)
+    def addGenericStr(self, portName, portType, defaultValue):
+        tmp = genericPort(portName, portType, defaultValue)
         strLen = len(portName)
         if strLen>self.portMaxLen:
             self.portMaxLen = strLen
         self.genericList.append(tmp)
 
-    def setGeneric(self,genericList):
+    def setGeneric(self, genericList):
         for inout in genericList:
             strNameLen = len(genericList.getName())
             if strNameLen>self.portMaxLen:
@@ -128,20 +128,20 @@ class component(object):
     def getGeneric(self):
         return self.genericList
 
-    def addInoutStr(self,portName,portType,inoutType):
+    def addInoutStr(self, portName, portType, inoutType):
         strNameLen = len(portName)
         if strNameLen>self.portMaxLen:
             self.portMaxLen = strNameLen
         strInoutLen = len(inoutType)
         if strInoutLen>self.inoutMaxLen:
             self.inoutMaxLen = strInoutLen
-        tmp = inoutPortVHDL(portName,portType,inoutType)
+        tmp = inoutPortVHDL(portName, portType, inoutType)
         self.inoutList.append(tmp)
 
 class componentVHDL(component):
 
-    def addGenericStr(self,portName,portType,defaultValue):
-        tmp = genericPortVHDL(portName,portType,defaultValue)
+    def addGenericStr(self, portName, portType, defaultValue):
+        tmp = genericPortVHDL(portName, portType, defaultValue)
         strLen = len(portName)
         if strLen>self.portMaxLen:
             self.portMaxLen = strLen
@@ -161,7 +161,7 @@ class componentVHDL(component):
     def getStrEntity(self):
         listOut = ["\tport (\n"]
         for port in self.inoutList:
-            for strAl in port.getStrAligned(self.portMaxLen,self.inoutMaxLen):
+            for strAl in port.getStrAligned(self.portMaxLen, self.inoutMaxLen):
                 listOut.append("\t\t"+strAl+"\n")
         listOut[-1] = listOut[-1][:-2]+"\n"
         listOut.append("\t);\n")
@@ -262,7 +262,7 @@ class componentVHDL(component):
         entityStr = ""
         with open(entityFile, "r") as f:
             # Entity begining searching
-            entNameRE = re.compile(r"(?<=entity)[ \t]+[\w]+[ \t]+(?=is)",re.I)
+            entNameRE = re.compile(r"(?<=entity)[ \t]+[\w]+[ \t]+(?=is)", re.I)
             entName = None
             line = None
             while (entName == None and line != ""):
@@ -273,7 +273,7 @@ class componentVHDL(component):
             else:
                 self.name = entName.group().strip()
             # Entity end searching
-            entEndER = re.compile(r"\bend\b",re.I)
+            entEndER = re.compile(r"\bend\b", re.I)
             entEnd = None
             while(entEnd == None and line != ""):
                 line = f.readline()
@@ -285,7 +285,7 @@ class componentVHDL(component):
                     # Adding to entity string
                     entityStr += lineSearch
 
-        portRE = re.compile(r"\bport\b",re.I);
+        portRE = re.compile(r"\bport\b", re.I);
         entSplit = portRE.split(entityStr)
         # Parsing of generic and port list
         if (len(entSplit) == 2):
@@ -303,10 +303,10 @@ class componentVHDL(component):
 
 class EntityInstantiator():
     def __init__(self):
-        self.libRe = re.compile(r"(?<=library)[\w \t]+",re.I)
-        self.compRe = re.compile(r"end[\t ]+component",re.I)
-        self.useRe = re.compile(r"USE[ \t]+ENTITY",re.I)
-        self.archRe = re.compile(r"begin",re.I)
+        self.libRe = re.compile(r"(?<=library)[\w \t]+", re.I)
+        self.compRe = re.compile(r"end[\t ]+component", re.I)
+        self.useRe = re.compile(r"USE[ \t]+ENTITY", re.I)
+        self.archRe = re.compile(r"begin", re.I)
         self.libExist = False
         self.libLine = -1
         self.archLine = -1
@@ -392,7 +392,7 @@ class EntityInstantiator():
         return strOut
 
 
-    def instantiate(self, entityFileName,bufferFileName,currLine):
+    def instantiate(self, entityFileName, bufferFileName, currLine):
         self.parseSourceFile(entityFileName)
         self.parseTargetFile(bufferFileName)
 
@@ -402,14 +402,14 @@ class EntityInstantiator():
             file.write(bytearray(strOut.encode('UTF-8')))
         
 
-def instantiateEntityVHDL(entityFileName,bufferFileName,currLine):
+def instantiateEntityVHDL(entityFileName, bufferFileName, currLine):
     instantiator = EntityInstantiator()
-    instantiator.instantiate(entityFileName,bufferFileName,currLine)
+    instantiator.instantiate(entityFileName, bufferFileName, currLine)
 
 
-def instantiateEntity(entityFileName,bufferFileName,currLine):
+def instantiateEntity(entityFileName, bufferFileName, currLine):
     if entityFileName[-4:]=='.vhd':
-        instantiateEntityVHDL(entityFileName,bufferFileName,currLine)
+        instantiateEntityVHDL(entityFileName, bufferFileName, currLine)
 
 import sys
 def command_line_interface(cmd_args):
@@ -418,7 +418,7 @@ def command_line_interface(cmd_args):
     if len(cmd_args)!=4:
         print(strUsing)
         sys.exit(2)
-    instantiateEntity(cmd_args[1],cmd_args[2],int(cmd_args[3]))
+    instantiateEntity(cmd_args[1], cmd_args[2], int(cmd_args[3]))
 
 if __name__ == "__main__":
     command_line_interface(sys.argv)
