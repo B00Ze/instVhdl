@@ -420,7 +420,7 @@ def instantiateEntity(entityFileName, bufferFileName, currLine):
 
 
 def command_line_interface(cmd_args):
-    strUsing = """Using of script:
+    strUsing = """Usage of script:
     python instVHDL.py input_file output_file str_num
     """
 

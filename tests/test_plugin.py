@@ -394,7 +394,7 @@ def tests_cmd_line_exit(mocker):
     with pytest.raises(SystemExit) as exit_raise:
         instVHDL.command_line_interface(cmd_args)
 
-    assert "Using of script" in fake_stdout.getvalue()
+    assert "Usage of script" in fake_stdout.getvalue()
     fake_inst.assert_not_called()
     mocker.resetall()
 
