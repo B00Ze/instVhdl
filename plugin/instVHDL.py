@@ -53,7 +53,7 @@ class genericPortVHDL(genericPort):
         strDefault = self.getDefault()
         if strDefault != "":
             strDefault = " := "+strDefault
-        return [self.getName()+" "*(nameMax-nameLen)+" : "+self.getType()+\
+        return [self.getName()+" "*(nameMax-nameLen)+" : "+self.getType() +
                     strDefault+";"]
 
     def getStrList(self):
@@ -80,7 +80,7 @@ class inoutPortVHDL(inoutPort):
     def getStrAligned(self, nameMax, inoutMax):
         nameLen = len(self.getName())
         inoutLen = len(self.getInout())
-        return [self.getName()+" "*(nameMax-nameLen)+" : "+self.getInout()+\
+        return [self.getName()+" "*(nameMax-nameLen)+" : "+self.getInout() +
                 " "*(inoutMax-inoutLen)+' '+self.getType()+";"]
 
     def getStrList(self):
@@ -111,21 +111,21 @@ class component(object):
 
     def addGeneric(self, genericPort):
         strLen = len(genericPort.getName())
-        if strLen>self.portMaxLen:
+        if strLen > self.portMaxLen:
             self.portMaxLen = strLen
         self.genericList.append(genericPort)
 
     def addGenericStr(self, portName, portType, defaultValue):
         tmp = genericPort(portName, portType, defaultValue)
         strLen = len(portName)
-        if strLen>self.portMaxLen:
+        if strLen > self.portMaxLen:
             self.portMaxLen = strLen
         self.genericList.append(tmp)
 
     def setGeneric(self, genericList):
         for inout in genericList:
             strNameLen = len(genericList.getName())
-            if strNameLen>self.portMaxLen:
+            if strNameLen > self.portMaxLen:
                 self.portMaxLen = strNameLen
         self.genericList = genericList
 
@@ -134,10 +134,10 @@ class component(object):
 
     def addInoutStr(self, portName, portType, inoutType):
         strNameLen = len(portName)
-        if strNameLen>self.portMaxLen:
+        if strNameLen > self.portMaxLen:
             self.portMaxLen = strNameLen
         strInoutLen = len(inoutType)
-        if strInoutLen>self.inoutMaxLen:
+        if strInoutLen > self.inoutMaxLen:
             self.inoutMaxLen = strInoutLen
         tmp = inoutPortVHDL(portName, portType, inoutType)
         self.inoutList.append(tmp)
@@ -148,13 +148,13 @@ class componentVHDL(component):
     def addGenericStr(self, portName, portType, defaultValue):
         tmp = genericPortVHDL(portName, portType, defaultValue)
         strLen = len(portName)
-        if strLen>self.portMaxLen:
+        if strLen > self.portMaxLen:
             self.portMaxLen = strLen
         self.genericList.append(tmp)
 
     def getStrGeneric(self):
         listOut = []
-        if (self.genericList != []) :
+        if (self.genericList != []):
             listOut.append("\tgeneric (\n")
             for gen in self.getGeneric():
                 for strAl in gen.getStrAligned(self.portMaxLen):
@@ -173,7 +173,7 @@ class componentVHDL(component):
         return listOut
 
     def getStrUse(self):
-        return ["\tFOR ALL : "+self.getName()+" USE ENTITY "+self.getLib()+\
+        return ["\tFOR ALL : "+self.getName()+" USE ENTITY "+self.getLib() +
                 "."+self.getName()+";\n"]
 
     def getStrMap(self):
@@ -182,24 +182,24 @@ class componentVHDL(component):
             strOut += ["\t\tgeneric map (\n"]
             for gen in self.genericList:
                 genNameLen = len(gen.getName())
-                strOut += ["\t\t\t"+gen.getName()+" "*(self.portMaxLen-genNameLen)+\
+                strOut += ["\t\t\t"+gen.getName()+" "*(self.portMaxLen-genNameLen) +
                             " => "+gen.getName()+",\n"]
             strOut[-1] = strOut[-1][:-2]+"\n"
             strOut += ["\t\t)\n"]
         strOut += ["\t\tport map(\n"]
         for inout in self.inoutList:
             inoutNameLen = len(inout.getName())
-            strOut += ["\t\t\t"+inout.getName()+" "*(self.portMaxLen-inoutNameLen)+\
+            strOut += ["\t\t\t"+inout.getName()+" "*(self.portMaxLen-inoutNameLen) +
                         " => "+inout.getName()+",\n"]
         strOut[-1] = strOut[-1][:-2]+"\n"
         strOut += ["\t\t);\n"]
         return strOut
 
     def getStrLib(self):
-        return ["LIBRARY " +self.getLib()+";\n"]
+        return ["LIBRARY "+self.getLib()+";\n"]
 
     def getStrComponent(self):
-        strOut =["component "+self.getName()+"\n"]
+        strOut = ["component "+self.getName()+"\n"]
         strOut += self.getStrGeneric()
         strOut += self.getStrEntity()
         strOut += ["end component;\n"]
@@ -210,7 +210,7 @@ class componentVHDL(component):
     def parseLib(self, fileName):
         import os
         separator = os.path.sep
-        if separator ==  '\\':
+        if separator == '\\':
             separator = r'\\'
         libRe = separator + r"[\w]+_lib" + separator
         libName = re.compile(libRe, re.I)
@@ -325,7 +325,7 @@ class EntityInstantiator():
         self.sourceInst.parseFile(sourceFileName)
 
     def parseTargetFile(self, destinationFileName):
-        with open(destinationFileName,"r+") as buffFile:
+        with open(destinationFileName, "r+") as buffFile:
             self._currBuffer = buffFile.readlines()
 
         for i in range(len(self._currBuffer)):
@@ -355,27 +355,27 @@ class EntityInstantiator():
             self.strPtr = self.libLine+1
 
     def _mergeComponentDeclaration(self):
-        if self.compLine>=0:
+        if self.compLine >= 0:
             self._mergeBuff += self._currBuffer[self.strPtr:self.compLine+1]
             self._mergeBuff += self.sourceInst.getStrComponent()
             self.strPtr = self.compLine+1
-        elif self.archLine>= 0:
+        elif self.archLine >= 0:
             self._mergeBuff += self._currBuffer[self.strPtr:self.archLine]
             self._mergeBuff += self.sourceInst.getStrComponent()
             self.strPtr = self.archLine
 
     def _mergeComponentMap(self):
-        if self.useLine>=0:
+        if self.useLine >= 0:
             self._mergeBuff += self._currBuffer[self.strPtr:self.useLine+1]
             self._mergeBuff += self.sourceInst.getStrUse()
             self.strPtr = self.useLine+1
-        elif self.archLine>= 0:
+        elif self.archLine >= 0:
             self._mergeBuff += self._currBuffer[self.strPtr:self.archLine]
             self._mergeBuff += self.sourceInst.getStrUse()
             self.strPtr = self.archLine
 
     def _mergeBlockInstance(self, currLine):
-        if currLine>=0:
+        if currLine >= 0:
             self._mergeBuff += self._currBuffer[self.strPtr:currLine-1]
             self._mergeBuff += self.sourceInst.getStrMap()
             self.strPtr = currLine-1
@@ -412,7 +412,7 @@ def instantiateEntityVHDL(entityFileName, bufferFileName, currLine):
 
 
 def instantiateEntity(entityFileName, bufferFileName, currLine):
-    if entityFileName[-4:]=='.vhd':
+    if entityFileName[-4:] == '.vhd':
         instantiateEntityVHDL(entityFileName, bufferFileName, currLine)
 
 
@@ -422,7 +422,7 @@ import sys
 def command_line_interface(cmd_args):
     strUsing = "Using of script:\n\tpython instVHDL.py input_file output_file str_num"
 
-    if len(cmd_args)!=4:
+    if len(cmd_args) != 4:
         print(strUsing)
         sys.exit(2)
     instantiateEntity(cmd_args[1], cmd_args[2], int(cmd_args[3]))
