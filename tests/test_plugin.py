@@ -2,17 +2,27 @@
 import pytest
 import string
 import random
+import sys
+import os
+from pytest_mock import mocker
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from plugin import instVHDL
 
+
 ALIGNMENT_SIGN = " "
 TEST_JOIN_SIGN = " "
+
 
 def get_alignment(name, alignment):
     colon_position = alignment + 1
     if len(name) > alignment:
         colon_position = len(name) + 1
     return colon_position
+
 
 def test_port_creation():
     p_name = "p_name"
@@ -30,17 +40,19 @@ def test_port_creation():
     assert p.getType() == p_type
 
 
-DEFAULT_P_NAME    = "p_name"
-DEFAULT_P_TYPE    = "p_type"
+DEFAULT_P_NAME = "p_name"
+DEFAULT_P_TYPE = "p_type"
 DEFAULT_P_DEFAULT = "p_default"
+
 
 @pytest.fixture()
 def generic_port():
-    p_name    = DEFAULT_P_NAME
-    p_type    = DEFAULT_P_TYPE
+    p_name = DEFAULT_P_NAME
+    p_type = DEFAULT_P_TYPE
     p_default = DEFAULT_P_DEFAULT
     p = instVHDL.genericPort(p_name, p_type, p_default)
     return p
+
 
 def test_generic_port_creation(generic_port):
     p = generic_port
@@ -48,19 +60,22 @@ def test_generic_port_creation(generic_port):
     assert p.getType() == DEFAULT_P_TYPE
     assert p.getDefault() == DEFAULT_P_DEFAULT
 
+
 @pytest.fixture()
 def generic_port_vhdl():
-    p_name    = DEFAULT_P_NAME
-    p_type    = DEFAULT_P_TYPE
+    p_name = DEFAULT_P_NAME
+    p_type = DEFAULT_P_TYPE
     p_default = DEFAULT_P_DEFAULT
     p = instVHDL.genericPortVHDL(p_name, p_type, p_default)
     return p
+
 
 def test_generic_port_vhdl_creation(generic_port_vhdl):
     p = generic_port_vhdl
     assert len(p.getStrList()) != 0
     assert DEFAULT_P_NAME in TEST_JOIN_SIGN.join(p.getStrList())
     assert DEFAULT_P_TYPE in TEST_JOIN_SIGN.join(p.getStrList())
+
 
 def test_generic_port_vhdl_alignment(generic_port_vhdl):
     p = generic_port_vhdl
@@ -69,6 +84,7 @@ def test_generic_port_vhdl_alignment(generic_port_vhdl):
         colon_position = get_alignment(DEFAULT_P_NAME, alignment)
         aligned = TEST_JOIN_SIGN.join(p.getStrAligned(alignment))
         assert aligned[colon_position] == ':'
+
 
 def test_generic_port_vhdl_default(generic_port_vhdl):
     p = generic_port_vhdl
@@ -87,10 +103,11 @@ def test_generic_port_vhdl_default(generic_port_vhdl):
     test_str = TEST_JOIN_SIGN.join(p.getStrAligned(alignment))
     assert ":=" not in test_str
 
+
 @pytest.fixture
 def port_inout():
-    p_name  = DEFAULT_P_NAME
-    p_type  = DEFAULT_P_TYPE
+    p_name = DEFAULT_P_NAME
+    p_type = DEFAULT_P_TYPE
     p_inout = DEFAULT_P_DEFAULT
     p = instVHDL.inoutPort(p_name, p_type, p_inout)
     return p
@@ -98,26 +115,28 @@ def port_inout():
 
 def tests_port_inout(port_inout):
     p = port_inout
-    assert p.getName()  == DEFAULT_P_NAME
-    assert p.getType()  == DEFAULT_P_TYPE
+    assert p.getName() == DEFAULT_P_NAME
+    assert p.getType() == DEFAULT_P_TYPE
     assert p.getInout() == DEFAULT_P_DEFAULT
+
 
 @pytest.fixture
 def port_inout_vhdl():
-    p_name  = DEFAULT_P_NAME
-    p_type  = DEFAULT_P_TYPE
+    p_name = DEFAULT_P_NAME
+    p_type = DEFAULT_P_TYPE
     p_inout = DEFAULT_P_DEFAULT
     p = instVHDL.inoutPortVHDL(p_name, p_type, p_inout)
     return p
 
+
 def tests_port_inout_vhdl_aligned(port_inout_vhdl):
     p = port_inout_vhdl
-    p_name  = DEFAULT_P_NAME
+    p_name = DEFAULT_P_NAME
     p_inout = DEFAULT_P_DEFAULT
 
     alignments = (0,  33,  len(p_inout), len(p_inout)-1)
     inout_alignments = (0,  33, len(p_name), len(p_name)-1,  len(p_inout), len(p_inout)-1)
-    for alignment  in alignments:
+    for alignment in alignments:
         colon_position = get_alignment(p_name, alignment)
         for inout_alignment in inout_alignments:
             inout_colon_offset = get_alignment(p_inout, inout_alignment)
@@ -135,12 +154,16 @@ def tests_port_inout_vhdl_aligned(port_inout_vhdl):
             assert aligned[inout_position+inout_colon_offset - 1] == ' ', \
                     "Inout not aligned to {}".format(inout_alignment)
 
+
 DEFAULT_C_NAME = "c_name"
+
+
 @pytest.fixture()
 def dummy_component():
     c_name = DEFAULT_C_NAME
     c = instVHDL.component(c_name)
     return c
+
 
 def tests_component_creation(dummy_component):
     c_name = DEFAULT_C_NAME
@@ -159,29 +182,33 @@ def tests_component_creation(dummy_component):
     c.setLib(c_lib)
     assert c.getLib() == c_lib
 
+
 DEFAULT_MAX_NAME_LENGTH = 30
+
 
 def random_name():
     valid_sumbols = string.ascii_letters + string.digits + "_"
     name_length = random.randint(1, DEFAULT_MAX_NAME_LENGTH)
     return ''.join(random.choice(valid_sumbols) for x in range(name_length))
 
+
 @pytest.fixture()
 def random_generic_list():
     MAX_LIST_LENGTH = 20
     out = []
     for _ in range(random.randint(3, MAX_LIST_LENGTH)):
-        p_name    = random_name()
-        p_type    = random_name()
+        p_name = random_name()
+        p_type = random_name()
         p_default = random_name()
         p = instVHDL.genericPort(p_name, p_type, p_default)
         out.append(p)
     return out
 
+
 def tests_component_generic_add(dummy_component, random_generic_list):
     for port in random_generic_list:
         dummy_component.addGeneric(port)
-    ports  =  dummy_component.getGeneric()
+    ports = dummy_component.getGeneric()
 
     assert len(ports) == len(random_generic_list)
     for port in random_generic_list:
@@ -191,9 +218,10 @@ def tests_component_generic_add(dummy_component, random_generic_list):
     assert len(dummy_component.getGeneric()) == 0
 
     for port in random_generic_list:
-        dummy_component.addGenericStr(port.getName(), port.getType(), port.getDefault())
+        dummy_component.addGenericStr(port.getName(), port.getType(),
+                                      port.getDefault())
 
-    port_names  =  []
+    port_names = []
     for port in dummy_component.getGeneric():
         port_names.append(port.getName())
 
@@ -201,7 +229,8 @@ def tests_component_generic_add(dummy_component, random_generic_list):
     for port in random_generic_list:
         assert port.getName() in port_names
 
-NOT_ELEMENT_TEXT =  """
+
+NOT_ELEMENT_TEXT = """
 entity not_element is
     port (
         A : in std_logic;
@@ -217,7 +246,6 @@ begin
 end impl; """
 
 
-import os
 def create_subdirs(full_filename):
     dirs = os.path.split(full_filename)
     if dirs[-1].endswith('.vhd'):
@@ -233,6 +261,7 @@ def testsample_directory():
     create_subdirs(TEST_SAMPLES_DIR)
     return TEST_SAMPLES_DIR
 
+
 @pytest.fixture()
 def file_writer(testsample_directory):
     files = []
@@ -246,8 +275,6 @@ def file_writer(testsample_directory):
         return full_path
     yield create
 
-#    for filename in files:
-#        os.remove(filename)
 
 @pytest.fixture()
 def file_reader(testsample_directory):
@@ -259,12 +286,12 @@ def file_reader(testsample_directory):
         return data
     yield read_file
 
+
 @pytest.fixture()
 def simple_not(file_writer):
     filename = "simple.vhd"
     simple_lines = NOT_ELEMENT_TEXT
     yield file_writer(filename, simple_lines)
-
 
 
 def tests_add_to_empty_file(file_writer, file_reader, simple_not):
@@ -280,8 +307,9 @@ def tests_add_to_empty_file(file_writer, file_reader, simple_not):
     assert "port map" in instantiated
     assert instantiated.count('=>') == 2
 
+
 def tests_add_to_not(file_reader, file_writer, simple_not):
-    out_filename  = "not_out.vhd"
+    out_filename = "not_out.vhd"
     full_out_path = file_writer(out_filename, NOT_ELEMENT_TEXT)
     out_line = 12
 
@@ -300,12 +328,12 @@ def tests_add_to_not(file_reader, file_writer, simple_not):
 
 def tests_add_library(file_reader, file_writer):
     input_libname = "inp_lib"
-    input_filename  = os.path.join(input_libname, "not_lib_in.vhd")
+    input_filename = os.path.join(input_libname, "not_lib_in.vhd")
     full_input_path = file_writer(input_filename, NOT_ELEMENT_TEXT)
 
     output_libname = "output_lib"
     output_libtext = "LIBRARY "+output_libname+";\n"+NOT_ELEMENT_TEXT
-    out_filename  = "not_lib_out.vhd"
+    out_filename = "not_lib_out.vhd"
     full_out_path = file_writer(out_filename, output_libtext)
 
     out_line = 12
@@ -326,7 +354,7 @@ def tests_add_library(file_reader, file_writer):
 
 
 def tests_add_to_not(file_reader, file_writer, simple_not):
-    out_filename  = "not_double_out.vhd"
+    out_filename = "not_double_out.vhd"
     full_out_path = file_writer(out_filename, NOT_ELEMENT_TEXT)
     out_line = 12
 
@@ -340,7 +368,8 @@ def tests_add_to_not(file_reader, file_writer, simple_not):
     assert instantiated.count("port map") == 2
     assert instantiated.count('=>') == 4
 
-NOT_VECTOR_GENERIC_TEXT =  """
+
+NOT_VECTOR_GENERIC_TEXT = """
 entity not_element is
     generic (
         CLK_FREQ     : natural := 24840000; -- Clock frequency in Hz
@@ -359,11 +388,12 @@ begin
 
 end impl; """
 
+
 def tests_add_generic_to_not(file_reader, file_writer):
-    input_filename  = "not_generic_in.vhd"
+    input_filename = "not_generic_in.vhd"
     full_input_path = file_writer(input_filename, NOT_VECTOR_GENERIC_TEXT)
 
-    out_filename  = "not_generic_out.vhd"
+    out_filename = "not_generic_out.vhd"
     full_out_path = file_writer(out_filename, NOT_ELEMENT_TEXT)
     out_line = 12
 
@@ -379,12 +409,6 @@ def tests_add_generic_to_not(file_reader, file_writer):
     assert "FOR ALL" in instantiated
     assert "USE ENTITY" in instantiated
 
-import sys
-from pytest_mock import mocker
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 def tests_cmd_line_exit(mocker):
     cmd_args = []
@@ -398,6 +422,7 @@ def tests_cmd_line_exit(mocker):
     fake_inst.assert_not_called()
     mocker.resetall()
 
+
 def tests_cmd_line_run(mocker):
     sourceName = "abc"
     targetName = "efg"
@@ -409,4 +434,3 @@ def tests_cmd_line_run(mocker):
 
     fake_inst.assert_called_once_with(sourceName, targetName, int(line))
     mocker.resetall()
-
